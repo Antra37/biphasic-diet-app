@@ -1,4 +1,4 @@
-const CACHE_NAME = "sibo-food-checker-v15";
+const CACHE_NAME = "sibo-food-checker-v16";
 const ASSETS = [
   "./",
   "./index.html",

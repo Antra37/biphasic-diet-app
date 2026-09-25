@@ -69,4 +69,19 @@ window.SIBO_EXTRA_SUPPLEMENTS = [
     warnings: "Warnings: If pregnant or likely to become pregnant, consult a health professional before use. If symptoms persist, talk to your health professional. Contains 130 mg sugar per maximum daily dose (10 g).",
     source: "bioconcepts.com.au (Orthoplex manufacturer) product page",
   },
+  {
+    id: "metagenics-ultraflora-gi-regulate",
+    brand: "Metagenics",
+    name: "UltraFlora GI Regulate",
+    form: "Powder",
+    aliases: ["ultra flora", "gi regulate", "299v", "phgg", "probiotic"],
+    serving: { min: 5, max: 5, unit: "g (2½ tsp) in 200 mL water", minDaily: 1, maxDaily: 1 },
+    amounts: [
+      "Lactobacillus plantarum 299v 20 billion CFU",
+      "Partially hydrolysed guar gum (PHGG)",
+    ],
+    directions: "Directions: Add 2½ metric teaspoons (5 g) to 200 mL of water and stir until dissolved. Take once daily, or as directed by your healthcare professional. Store in the fridge (2-8°C), do not freeze.",
+    warnings: "If symptoms persist consult your healthcare professional.",
+    source: "metagenics.com.au product page",
+  },
 ];
