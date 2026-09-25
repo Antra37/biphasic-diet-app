@@ -19,7 +19,7 @@
   allowable foods from Phase One." Any item filled in this way is flagged with a note.
 
   This is a personal reference tool built from a published diet guide, not medical advice.
-  Always defer to the wife's own practitioner for anything ambiguous.
+  Always defer to your own practitioner for anything ambiguous.
 */
 
 const CATEGORY_LIMITS = {
@@ -119,11 +119,11 @@ const FOODS = [
     p1r:{status:"avoid"}, p1s:{status:"allow",qty:"¼ cup, soaked & cooked"}, p2:{status:"allow",qty:"½ cup, soaked & cooked"} },
   { id:"adzuki-beans", name:"Adzuki beans", category:"Plant-based protein", sourcePage:"9",
     p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"allow",qty:"½ cup, soaked & cooked"} },
-  { id:"other-legumes", name:"Other/unlisted legumes", category:"Plant-based protein", aliases:["beans (other)","chickpeas","kidney beans","split peas"], sourcePage:"5,9",
+  { id:"other-legumes", name:"Other/unlisted legumes", category:"Plant-based protein", aliases:["chickpeas","kidney beans","split peas"], sourcePage:"5,9",
     p1r:{status:"avoid",note:"Any legume not explicitly listed."}, p1s:{status:"avoid"}, p2:{status:"avoid"} },
 
   // ---------------- DAIRY ----------------
-  { id:"dairy-general", name:"Dairy (milk, cream, soft cheese, standard yogurt etc.)", category:"Dairy", aliases:["milk","dairy"], sourcePage:"5",
+  { id:"dairy-general", name:"Dairy (milk, cream, soft cheese, standard yogurt etc.)", category:"Dairy", aliases:["dairy","cow's milk","regular milk"], sourcePage:"5",
     p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"avoid",note:"Dairy opens up in Phase Two, but only the specific items below - not dairy in general."} },
   { id:"cheddar", name:"Cheddar cheese", category:"Dairy", sourcePage:"9",
     p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"allow",qty:"1/3 cup / 40g"} },
@@ -156,7 +156,7 @@ const FOODS = [
   { id:"kefir", name:"Kefir", category:"Dairy", sourcePage:"9",
     p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"allow",qty:"2 tbsp"} },
   { id:"dairy-other", name:"Other dairy products (not listed)", category:"Dairy", sourcePage:"9",
-    p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"avoid",note:"Unless specifically approved by her practitioner."} },
+    p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"avoid",note:"Unless specifically approved by your practitioner."} },
 
   // ---------------- VEGETABLES - UNLIMITED ----------------
   { id:"lettuce-loose-leaf", name:"Loose leaf lettuce (all types)", category:"veg-unlimited", aliases:["lettuce"], sourcePage:"5,9",
@@ -244,7 +244,7 @@ const FOODS = [
   { id:"broccoli", name:"Broccoli", category:"veg-limited", aliases:["brocolli"], sourcePage:"6,10",
     p1r:{status:"allow",qty:"½ cup"}, p1s:{status:"allow",qty:"½ cup"}, p2:{status:"allow",qty:"½ cup"} },
   { id:"brussels-sprouts", name:"Brussels sprouts", category:"veg-limited", sourcePage:"6,10",
-    p1r:{status:"allow",qty:"2 sprouts"}, p1s:{status:"allow",qty:"½ cup"}, p2:{status:"allow",qty:"½ a sprout",note:"Quantity as printed in the guide - looks unusually small compared to other phases; worth confirming with her practitioner."} },
+    p1r:{status:"allow",qty:"2 sprouts"}, p1s:{status:"allow",qty:"½ cup"}, p2:{status:"allow",qty:"½ a sprout",note:"Quantity as printed in the guide - looks unusually small compared to other phases; worth confirming with your practitioner."} },
   { id:"cabbage", name:"Cabbage (Savoy, Wombok, Red, Green)", category:"veg-limited", sourcePage:"6,10",
     p1r:{status:"allow",qty:"½ cup"}, p1s:{status:"allow",qty:"½ cup"}, p2:{status:"allow",qty:"¾ cup"} },
   { id:"carrot-orange", name:"Carrot (orange)", category:"veg-limited", aliases:["carrot"], sourcePage:"6,10",
@@ -283,7 +283,7 @@ const FOODS = [
     p1r:{status:"avoid"}, p1s:{status:"allow",qty:"½ cup"}, p2:{status:"allow",qty:"½ cup"} },
   { id:"potato-peeled", name:"Potato (peeled)", category:"veg-starchy", sourcePage:"6",
     p1r:{status:"avoid"}, p1s:{status:"allow",qty:"½ cup"}, p2:{status:"allow",qty:"1 medium (unpeeled OK)"} },
-  { id:"potato-unpeeled", name:"Potato (unpeeled)", category:"veg-starchy", aliases:["potato"], sourcePage:"6,11",
+  { id:"potato-unpeeled", name:"Potato (unpeeled)", category:"veg-starchy", sourcePage:"6,11",
     p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"allow",qty:"1 medium"} },
   { id:"turnip", name:"Turnip", category:"veg-starchy", sourcePage:"6,11",
     p1r:{status:"avoid"}, p1s:{status:"allow",qty:"½ cup"}, p2:{status:"allow",qty:"½ cup"} },
@@ -360,7 +360,7 @@ const FOODS = [
   { id:"plum", name:"Plum", category:"fruit", sourcePage:"7,11",
     p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"avoid"} },
   { id:"dried-fruit", name:"Dried fruit", category:"fruit", sourcePage:"7,11",
-    p1r:{status:"avoid",note:"Unless specifically approved by her practitioner."}, p1s:{status:"avoid"}, p2:{status:"avoid"} },
+    p1r:{status:"avoid",note:"Unless specifically approved by your practitioner."}, p1s:{status:"avoid"}, p2:{status:"avoid"} },
 
   // ---------------- GRAINS, STARCHES & CEREALS ----------------
   { id:"kelp-konjac-noodles", name:"Kelp / Konjac noodles", category:"grains", sourcePage:"7,11",
@@ -380,13 +380,13 @@ const FOODS = [
   { id:"crackers-approved-grain", name:"Crackers made from approved grains", category:"grains", sourcePage:"11",
     p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"allow",qty:"10 small or 2 large"} },
   { id:"gf-oats", name:"Gluten-free oats", category:"grains", aliases:["oats"], sourcePage:"11",
-    p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"caution",note:"Check tolerance with her practitioner before adding."} },
+    p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"caution",note:"Check tolerance with your practitioner before adding."} },
   { id:"corn-flour-tortillas", name:"Corn flour / tortillas", category:"grains", sourcePage:"11",
-    p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"caution",note:"Check with her practitioner if tolerated."} },
+    p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"caution",note:"Check with your practitioner if tolerated."} },
   { id:"gf-yeast-free-bread", name:"Gluten-free, yeast-free bread", category:"grains", aliases:["bread"], sourcePage:"11",
-    p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"caution",note:"Some brands OK - check with her practitioner and read labels."} },
+    p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"caution",note:"Some brands OK - check with your practitioner and read labels."} },
   { id:"other-grains", name:"Other grains not listed (wheat, regular oats, barley, rye, spelt, couscous, regular bread/pasta)", category:"grains", aliases:["wheat","pasta","couscous","barley"], sourcePage:"7,11",
-    p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"avoid",note:"Unless specifically approved by her practitioner."} },
+    p1r:{status:"avoid"}, p1s:{status:"avoid"}, p2:{status:"avoid",note:"Unless specifically approved by your practitioner."} },
 
   // ---------------- SOUPS ----------------
   { id:"homemade-broth", name:"Homemade broth (from allowed proteins & vegetables)", category:"Soups", aliases:["broth","stock","bone broth"], sourcePage:"7,11",

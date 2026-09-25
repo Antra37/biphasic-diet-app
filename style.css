@@ -53,6 +53,33 @@ body {
   letter-spacing: -0.01em;
 }
 
+/* Tabs */
+.tab-bar {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 9;
+  background: var(--brand-dark);
+}
+
+.tab-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.65);
+  padding: 11px 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-bottom: 3px solid transparent;
+}
+
+.tab-btn.active {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+
+.tab-panel.hidden { display: none; }
+
 .phase-btn {
   display: flex;
   align-items: center;
@@ -274,4 +301,339 @@ main {
   color: var(--muted);
   padding: 10px;
   font-size: 0.95rem;
+}
+
+/* ===================== Meal builder ===================== */
+
+.day-summary {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.day-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.day-date {
+  font-weight: 700;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--brand-dark);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px;
+}
+
+.fruit-gauge {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+#fruitGaugeText {
+  font-weight: 700;
+  color: var(--allow);
+}
+
+#fruitGaugeText.over {
+  color: var(--avoid);
+}
+
+.today-meals {
+  margin-top: 10px;
+}
+
+.today-empty {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin: 10px 0 0;
+}
+
+.saved-meal-card {
+  border-top: 1px solid var(--border);
+  padding: 10px 0;
+}
+
+.saved-meal-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.saved-meal-name {
+  font-weight: 700;
+  flex: 1;
+}
+
+.saved-meal-items {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.add-meal-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius);
+  border: 1.5px dashed var(--brand);
+  background: transparent;
+  color: var(--brand-dark);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.meal-editor {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.meal-editor-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.meal-name-input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  font-size: 0.95rem;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  margin: 14px 0 6px;
+}
+
+.quick-add-text {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.primary-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 11px;
+  border-radius: 10px;
+  border: none;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.check-btn {
+  margin-top: 16px;
+  background: var(--brand-dark);
+}
+
+.unmatched-wrap {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: 12px;
+}
+
+.unmatched-title {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+.uncertain-card {
+  margin-bottom: 8px;
+}
+
+.uncertain-raw {
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.uncertain-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.meal-search-results {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.meal-search-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 0.92rem;
+  text-align: left;
+}
+
+.add-icon {
+  color: var(--brand-dark);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.meal-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meal-items-empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 4px 0;
+}
+
+.meal-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--bg);
+  border-left: 4px solid var(--muted);
+  border-radius: 10px;
+  padding: 9px 12px;
+}
+
+.meal-item-row.allow { border-left-color: var(--allow); }
+.meal-item-row.avoid { border-left-color: var(--avoid); }
+.meal-item-row.caution { border-left-color: var(--caution); }
+
+.meal-item-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.meal-item-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+}
+
+.meal-item-limit {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.status-badge.small {
+  font-size: 0.65rem;
+  padding: 3px 8px;
+}
+
+.meal-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.stepper-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--brand-dark);
+}
+
+.stepper-val {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.remove-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: var(--border);
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+  margin-left: 4px;
+}
+
+.verdict-wrap {
+  margin-top: 16px;
+}
+
+.verdict-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.98rem;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.verdict-banner.allow { background: var(--allow-bg); color: var(--allow); }
+.verdict-banner.avoid { background: var(--avoid-bg); color: var(--avoid); }
+.verdict-banner.caution { background: var(--caution-bg); color: var(--caution); }
+
+.verdict-icon {
+  font-size: 1.1rem;
+}
+
+.verdict-list {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.verdict-list li {
+  margin-bottom: 8px;
+}
+
+.save-btn {
+  margin-top: 14px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: var(--allow);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.92rem;
 }

@@ -19,9 +19,14 @@
   </button>
 </header>
 
+<nav class="tab-bar" role="tablist">
+  <button class="tab-btn active" data-tab="search" role="tab" aria-selected="true">Search</button>
+  <button class="tab-btn" data-tab="meal" role="tab" aria-selected="false">Meal Check</button>
+</nav>
+
 <div id="phaseSheet" class="phase-sheet hidden">
   <div class="phase-sheet-inner">
-    <h2>Which phase is she on?</h2>
+    <h2>Which phase are you on?</h2>
     <button class="phase-option" data-phase="p1r">
       <span class="phase-option-title">Phase One — Restricted</span>
       <span class="phase-option-sub">Strictest level. Most people start here.</span>
@@ -39,24 +44,80 @@
 </div>
 
 <main>
-  <div class="search-wrap">
-    <input id="searchInput" type="text" inputmode="search" autocomplete="off" placeholder="Search a food, e.g. broccoli, tofu, honey…" />
-    <button id="clearBtn" class="clear-btn hidden" aria-label="Clear search">&times;</button>
-  </div>
 
-  <div id="results" class="results"></div>
+  <!-- ===================== SEARCH TAB ===================== -->
+  <section id="tab-search" class="tab-panel">
+    <div class="search-wrap">
+      <input id="searchInput" type="text" inputmode="search" autocomplete="off" placeholder="Search a food, e.g. broccoli, tofu, honey…" />
+      <button id="clearBtn" class="clear-btn hidden" aria-label="Clear search">&times;</button>
+    </div>
 
-  <div id="emptyState" class="empty-state">
-    <p>Type a food above to check if it's allowed and how much of it she can have.</p>
-    <p class="hint">Try: <button class="chip" data-fill="broccoli">broccoli</button><button class="chip" data-fill="garlic">garlic</button><button class="chip" data-fill="rice">rice</button><button class="chip" data-fill="banana">banana</button></p>
-  </div>
+    <div id="results" class="results"></div>
+
+    <div id="emptyState" class="empty-state">
+      <p>Type a food above to check if it's allowed and how much you can have.</p>
+      <p class="hint">Try: <button class="chip" data-fill="broccoli">broccoli</button><button class="chip" data-fill="garlic">garlic</button><button class="chip" data-fill="rice">rice</button><button class="chip" data-fill="banana">banana</button></p>
+    </div>
+  </section>
+
+  <!-- ===================== MEAL CHECK TAB ===================== -->
+  <section id="tab-meal" class="tab-panel hidden">
+
+    <div class="day-summary">
+      <div class="day-summary-row">
+        <span id="dayDateLabel" class="day-date"></span>
+        <button id="newDayBtn" class="link-btn">Start new day</button>
+      </div>
+      <div class="fruit-gauge">
+        <span>Fruit today</span>
+        <span id="fruitGaugeText">0 / 2 serves</span>
+      </div>
+      <div id="todayMeals" class="today-meals"></div>
+    </div>
+
+    <div id="mealEditor" class="meal-editor hidden">
+      <div class="meal-editor-head">
+        <input id="mealNameInput" class="meal-name-input" type="text" placeholder="Meal name (e.g. Lunch)" />
+        <button id="mealEditorClose" class="link-btn">Cancel</button>
+      </div>
+
+      <label class="field-label">Type what you're having (comma-separated is fine)</label>
+      <textarea id="quickAddText" class="quick-add-text" rows="2" placeholder="e.g. 200g steak, broccoli, green beans, rocket and carrot salad"></textarea>
+      <button id="parseBtn" class="primary-btn">Add these foods</button>
+
+      <div id="unmatchedWrap" class="unmatched-wrap hidden">
+        <p class="unmatched-title">Couldn't confidently match these — search and add manually below:</p>
+        <div id="unmatchedList" class="unmatched-list"></div>
+      </div>
+
+      <label class="field-label">Or search and add one at a time</label>
+      <div class="search-wrap">
+        <input id="mealSearchInput" type="text" inputmode="search" autocomplete="off" placeholder="Search a food to add…" />
+      </div>
+      <div id="mealSearchResults" class="meal-search-results"></div>
+
+      <label class="field-label">Foods in this meal</label>
+      <div id="mealItems" class="meal-items"></div>
+
+      <button id="checkMealBtn" class="primary-btn check-btn">Check this meal</button>
+
+      <div id="verdictWrap" class="verdict-wrap hidden"></div>
+
+      <button id="saveMealBtn" class="save-btn hidden">Save to today's log</button>
+    </div>
+
+    <button id="addMealBtn" class="add-meal-btn">+ Add a meal</button>
+  </section>
+
 </main>
 
 <footer class="app-footer">
-  <p>Reference tool built from <em>The SIBO Bi-Phasic Diet</em> (Dr. Nirala Jacobi ND). Not medical advice — when in doubt, check with her practitioner.</p>
+  <p>Reference tool built from <em>The SIBO Bi-Phasic Diet</em> (Dr. Nirala Jacobi ND). Not medical advice — when in doubt, check with your practitioner.</p>
 </footer>
 
 <script src="data/foods.js"></script>
+<script src="match.js"></script>
 <script src="app.js"></script>
+<script src="meal.js"></script>
 </body>
 </html>

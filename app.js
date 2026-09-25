@@ -35,7 +35,14 @@
       btn.classList.toggle("active", btn.dataset.phase === phase);
     });
     runSearch(searchInput.value);
+    window.dispatchEvent(new CustomEvent("sibo-phase-changed", { detail: { phase } }));
   }
+
+  window.SiboPhase = {
+    get: () => currentPhase,
+    meta: PHASE_META,
+  };
+  window.SiboStatusMeta = STATUS_META;
 
   function openPhaseSheet() {
     phaseSheet.classList.remove("hidden");
@@ -59,44 +66,8 @@
     });
   });
 
-  function normalize(str) {
-    return (str || "").toLowerCase().trim();
-  }
-
-  // Very small stemmer: strip a trailing "s" so "carrots" matches "carrot".
-  function stem(str) {
-    if (str.length > 3 && str.endsWith("ies")) return str.slice(0, -3) + "y";
-    if (str.length > 3 && str.endsWith("es")) return str.slice(0, -2);
-    if (str.length > 3 && str.endsWith("s") && !str.endsWith("ss")) return str.slice(0, -1);
-    return str;
-  }
-
-  function scoreFood(food, qNorm, qStem) {
-    const name = normalize(food.name);
-    const nameStem = stem(name);
-    const aliases = (food.aliases || []).map(normalize);
-
-    if (name === qNorm || nameStem === qStem) return 100;
-    if (aliases.includes(qNorm)) return 95;
-    if (name.startsWith(qNorm)) return 80;
-    if (aliases.some((a) => a.startsWith(qNorm))) return 75;
-    if (name.includes(qNorm)) return 50;
-    if (aliases.some((a) => a.includes(qNorm))) return 45;
-    if (nameStem.includes(qStem)) return 40;
-    return 0;
-  }
-
   function search(query) {
-    const qNorm = normalize(query);
-    if (!qNorm) return [];
-    const qStem = stem(qNorm);
-
-    return FOODS
-      .map((food) => ({ food, score: scoreFood(food, qNorm, qStem) }))
-      .filter((r) => r.score > 0)
-      .sort((a, b) => b.score - a.score || a.food.name.localeCompare(b.food.name))
-      .slice(0, 20)
-      .map((r) => r.food);
+    return SiboMatch.search(query, 20);
   }
 
   function categoryLabel(catId) {
@@ -118,7 +89,7 @@
         ? `<div class="result-qty">Limit: <strong>${escapeHtml(phaseData.qty)}</strong></div>`
         : `<div class="result-qty"><strong>Unlimited</strong> — no stated limit</div>`;
     } else if (status === "caution") {
-      qtyLine = `<div class="result-qty"><strong>Check with her practitioner</strong></div>`;
+      qtyLine = `<div class="result-qty"><strong>Check with your practitioner</strong></div>`;
     }
 
     const noteLine = phaseData.note
@@ -181,6 +152,26 @@
       searchInput.value = chip.dataset.fill;
       runSearch(searchInput.value);
       searchInput.focus();
+    });
+  });
+
+  // Tabs
+  const tabBtns = document.querySelectorAll(".tab-btn");
+  const tabPanels = {
+    search: document.getElementById("tab-search"),
+    meal: document.getElementById("tab-meal"),
+  };
+  tabBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const tab = btn.dataset.tab;
+      tabBtns.forEach((b) => {
+        b.classList.toggle("active", b === btn);
+        b.setAttribute("aria-selected", b === btn ? "true" : "false");
+      });
+      Object.keys(tabPanels).forEach((key) => {
+        tabPanels[key].classList.toggle("hidden", key !== tab);
+      });
+      if (tab === "meal") window.dispatchEvent(new CustomEvent("sibo-tab-meal-shown"));
     });
   });
 
