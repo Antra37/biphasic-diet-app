@@ -1,4 +1,4 @@
-const CACHE_NAME = "sibo-food-checker-v8";
+const CACHE_NAME = "sibo-food-checker-v10";
 const ASSETS = [
   "./",
   "./index.html",
@@ -31,17 +31,19 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+// Network-first: always try to get the latest deployed code when online, and only fall
+// back to the cached copy when offline. (A cache-first/stale-while-revalidate strategy
+// was tried here before, but it means a freshly-deployed fix doesn't actually show up
+// until the *second* time the app is opened - not acceptable while this app is still
+// actively being updated.)
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()));
-          return networkResponse;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()));
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

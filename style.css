@@ -3,8 +3,9 @@
   --card: #ffffff;
   --ink: #23302c;
   --muted: #6b7770;
-  --brand: #c1876f;
-  --brand-dark: #8f5f4c;
+  --brand: #dab68f;
+  --brand-dark: #b98f63;
+  --on-brand: #4a3624;
   --allow: #2f8f5b;
   --allow-bg: #e8f6ee;
   --avoid: #c0463b;
@@ -43,7 +44,7 @@ body {
   gap: 12px;
   padding: calc(env(safe-area-inset-top) + 14px) 16px 14px;
   background: var(--brand);
-  color: #fff;
+  color: var(--on-brand);
 }
 
 .app-header h1 {
@@ -66,7 +67,7 @@ body {
   flex: 1;
   border: none;
   background: transparent;
-  color: rgba(255,255,255,0.65);
+  color: rgba(255,255,255,0.8);
   padding: 11px 8px;
   font-size: 0.88rem;
   font-weight: 600;
@@ -112,9 +113,9 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255,255,255,0.16);
-  border: 1px solid rgba(255,255,255,0.3);
-  color: #fff;
+  background: rgba(74,54,36,0.12);
+  border: 1px solid rgba(74,54,36,0.3);
+  color: var(--on-brand);
   padding: 8px 12px;
   border-radius: 999px;
   font-size: 0.82rem;

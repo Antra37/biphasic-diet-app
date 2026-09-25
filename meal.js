@@ -211,14 +211,13 @@
     return { kcal: factor * n.kcal100, protein: factor * n.protein100, fiber: factor * n.fiber100 };
   }
 
-  // Sums macros across a list of {foodId, servings, food?} for whichever items are "allow" in phaseKey.
-  function sumMacros(items, phaseKey) {
+  // Sums macros across a list of {foodId, servings, food?}. Counts every item regardless
+  // of allow/avoid/caution status - she may eat something off-plan and still want it logged.
+  function sumMacros(items) {
     const totals = { kcal: 0, protein: 0, fiber: 0 };
     items.forEach((i) => {
       const food = i.food || getFood(i.foodId);
       if (!food) return;
-      const pd = food[phaseKey];
-      if (!pd || pd.status !== "allow") return;
       const m = itemMacros(food, i.servings);
       if (!m) return;
       totals.kcal += m.kcal;
@@ -249,19 +248,19 @@
       const row = document.createElement("div");
       row.className = `meal-item-row ${pd.status}`;
 
+      const label = servingLabel(food, pd);
       let subLine = `<span class="status-badge small ${pd.status}">${meta[pd.status].icon} ${meta[pd.status].label}</span>`;
-      if (pd.status === "allow") {
-        const label = servingLabel(food, pd);
-        subLine += label
-          ? `<span class="meal-item-limit">1 serving = ${escapeHtml(label)}</span>`
-          : `<span class="meal-item-limit">unlimited - no stated serving size</span>`;
+      if (label) {
+        subLine += `<span class="meal-item-limit">1 serving = ${escapeHtml(label)}</span>`;
+      } else if (pd.status === "allow") {
+        subLine += `<span class="meal-item-limit">unlimited - no stated serving size</span>`;
       }
 
       const noteLine = item.qtyNote
         ? `<div class="meal-item-note">You entered: ${escapeHtml(item.qtyNote)}</div>`
         : "";
 
-      const controls = pd.status === "allow"
+      const controls = label
         ? `<button class="stepper-btn" data-action="dec" data-id="${food.id}">−</button>
            <span class="stepper-val">${item.servings}</span>
            <button class="stepper-btn" data-action="inc" data-id="${food.id}">+</button>`
@@ -442,7 +441,7 @@
     else if (categoryFlags.length > 0 || fruitOver) verdict = "adjust";
     else if (cautionItems.length > 0 || dailyReminders.length > 0) verdict = "check";
 
-    const macros = sumMacros(okItems, ph);
+    const macros = sumMacros(withFood);
 
     return {
       verdict, avoidItems, cautionItems, categoryFlags,
@@ -586,7 +585,7 @@
       const mp = meal.phase || phase();
       const items = meal.items.map((i) => ({ ...i, food: getFood(i.foodId) })).filter((i) => i.food);
       const hasAvoid = items.some((i) => i.food[mp] && i.food[mp].status === "avoid");
-      const mealMacros = sumMacros(items, mp);
+      const mealMacros = sumMacros(items);
       dayTotals.kcal += mealMacros.kcal;
       dayTotals.protein += mealMacros.protein;
       dayTotals.fiber += mealMacros.fiber;
@@ -648,7 +647,7 @@
           const servingsTxt = i.servings !== 1 ? ` x${i.servings}` : "";
           lines.push(`  - ${i.food.name}${servingsTxt} [${statusTxt}]`);
         });
-        const mealMacros = sumMacros(itemsWithFood, mp);
+        const mealMacros = sumMacros(itemsWithFood);
         dayTotals.kcal += mealMacros.kcal;
         dayTotals.protein += mealMacros.protein;
         dayTotals.fiber += mealMacros.fiber;
