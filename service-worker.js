@@ -1,4 +1,4 @@
-const CACHE_NAME = "sibo-food-checker-v6";
+const CACHE_NAME = "sibo-food-checker-v8";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const ASSETS = [
   "./app.js",
   "./meal.js",
   "./data/foods.js",
+  "./data/nutrition.js",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

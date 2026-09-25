@@ -9,6 +9,7 @@
   const newDayBtn = document.getElementById("newDayBtn");
   const exportBtn = document.getElementById("exportBtn");
   const fruitGaugeText = document.getElementById("fruitGaugeText");
+  const dayMacroText = document.getElementById("dayMacroText");
   const todayMealsEl = document.getElementById("todayMeals");
 
   const addMealBtn = document.getElementById("addMealBtn");
@@ -195,6 +196,42 @@
     return window.SiboStatusMeta;
   }
 
+  function servingLabel(food, pd) {
+    if (pd.qty) return pd.qty;
+    const n = NUTRITION[food.id];
+    if (!n || n.excluded) return null;
+    return n.label || `~${n.grams}g`;
+  }
+
+  // { kcal, protein, fiber } for one item at its current serving count.
+  function itemMacros(food, servings) {
+    const n = NUTRITION[food.id];
+    if (!n || n.excluded) return null;
+    const factor = (servings * n.grams) / 100;
+    return { kcal: factor * n.kcal100, protein: factor * n.protein100, fiber: factor * n.fiber100 };
+  }
+
+  // Sums macros across a list of {foodId, servings, food?} for whichever items are "allow" in phaseKey.
+  function sumMacros(items, phaseKey) {
+    const totals = { kcal: 0, protein: 0, fiber: 0 };
+    items.forEach((i) => {
+      const food = i.food || getFood(i.foodId);
+      if (!food) return;
+      const pd = food[phaseKey];
+      if (!pd || pd.status !== "allow") return;
+      const m = itemMacros(food, i.servings);
+      if (!m) return;
+      totals.kcal += m.kcal;
+      totals.protein += m.protein;
+      totals.fiber += m.fiber;
+    });
+    return totals;
+  }
+
+  function formatMacros(totals) {
+    return `~${Math.round(totals.kcal)} kcal · ${totals.protein.toFixed(1)}g protein · ${totals.fiber.toFixed(1)}g fibre`;
+  }
+
   function renderDraftItems() {
     mealItemsEl.innerHTML = "";
     if (draftItems.length === 0) {
@@ -214,8 +251,9 @@
 
       let subLine = `<span class="status-badge small ${pd.status}">${meta[pd.status].icon} ${meta[pd.status].label}</span>`;
       if (pd.status === "allow") {
-        subLine += pd.qty
-          ? `<span class="meal-item-limit">1 serving = ${escapeHtml(pd.qty)}</span>`
+        const label = servingLabel(food, pd);
+        subLine += label
+          ? `<span class="meal-item-limit">1 serving = ${escapeHtml(label)}</span>`
           : `<span class="meal-item-limit">unlimited - no stated serving size</span>`;
       }
 
@@ -404,10 +442,12 @@
     else if (categoryFlags.length > 0 || fruitOver) verdict = "adjust";
     else if (cautionItems.length > 0 || dailyReminders.length > 0) verdict = "check";
 
+    const macros = sumMacros(okItems, ph);
+
     return {
       verdict, avoidItems, cautionItems, categoryFlags,
       fruitThisMeal, fruitBefore, fruitAfter, fruitCap, fruitOver,
-      dailyReminders,
+      dailyReminders, macros,
     };
   }
 
@@ -444,6 +484,8 @@
     }
 
     html += `<ul class="verdict-list">${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`;
+    html += `<div class="macro-line">${formatMacros(ev.macros)}</div>
+              <div class="macro-caveat">Approximate, from typical reference serving sizes — not exact lab values.</div>`;
     verdictWrap.innerHTML = html;
     verdictWrap.classList.remove("hidden");
     saveMealBtn.classList.remove("hidden");
@@ -531,9 +573,12 @@
     fruitGaugeText.textContent = `${fruitTotal} / ${fruitCap} serves`;
     fruitGaugeText.classList.toggle("over", fruitTotal > fruitCap);
 
+    let dayTotals = { kcal: 0, protein: 0, fiber: 0 };
+
     todayMealsEl.innerHTML = "";
     if (day.meals.length === 0) {
       todayMealsEl.innerHTML = '<p class="today-empty">No meals logged yet today.</p>';
+      dayMacroText.textContent = "";
       return;
     }
 
@@ -541,6 +586,10 @@
       const mp = meal.phase || phase();
       const items = meal.items.map((i) => ({ ...i, food: getFood(i.foodId) })).filter((i) => i.food);
       const hasAvoid = items.some((i) => i.food[mp] && i.food[mp].status === "avoid");
+      const mealMacros = sumMacros(items, mp);
+      dayTotals.kcal += mealMacros.kcal;
+      dayTotals.protein += mealMacros.protein;
+      dayTotals.fiber += mealMacros.fiber;
       const card = document.createElement("div");
       card.className = "saved-meal-card";
       card.dataset.mealId = meal.id;
@@ -552,9 +601,12 @@
           <button class="remove-btn" data-action="delete" data-meal-id="${meal.id}" aria-label="Delete meal">&times;</button>
         </div>
         <div class="saved-meal-items">${items.map((i) => escapeHtml(i.food.name)).join(", ")}</div>
+        <div class="saved-meal-macros">${formatMacros(mealMacros)}</div>
       `;
       todayMealsEl.appendChild(card);
     });
+
+    dayMacroText.textContent = `Today: ${formatMacros(dayTotals)}`;
   }
 
   todayMealsEl.addEventListener("click", (e) => {
@@ -585,20 +637,27 @@
         weekday: "long", year: "numeric", month: "short", day: "numeric",
       });
       lines.push(`== ${dateLabel} ==`);
+      let dayTotals = { kcal: 0, protein: 0, fiber: 0 };
       diary.days[dateStr].meals.forEach((meal) => {
         const mp = meal.phase || "p1r";
         lines.push(`${meal.name} (${PHASE_LABELS[mp] || mp})`);
-        meal.items.forEach((i) => {
-          const food = getFood(i.foodId);
-          if (!food) return;
-          const pd = food[mp];
+        const itemsWithFood = meal.items.map((i) => ({ ...i, food: getFood(i.foodId) })).filter((i) => i.food);
+        itemsWithFood.forEach((i) => {
+          const pd = i.food[mp];
           const statusTxt = pd.status === "avoid" ? "AVOID" : pd.status === "caution" ? "check with practitioner" : (pd.qty || "unlimited");
           const servingsTxt = i.servings !== 1 ? ` x${i.servings}` : "";
-          lines.push(`  - ${food.name}${servingsTxt} [${statusTxt}]`);
+          lines.push(`  - ${i.food.name}${servingsTxt} [${statusTxt}]`);
         });
+        const mealMacros = sumMacros(itemsWithFood, mp);
+        dayTotals.kcal += mealMacros.kcal;
+        dayTotals.protein += mealMacros.protein;
+        dayTotals.fiber += mealMacros.fiber;
+        lines.push(`  (${formatMacros(mealMacros)})`);
       });
+      lines.push(`Day total: ${formatMacros(dayTotals)}`);
       lines.push("");
     });
+    lines.push("Nutrition figures are approximate, based on typical reference serving sizes - not lab-measured values.");
     return lines.join("\n");
   }
 

@@ -3,8 +3,8 @@
   --card: #ffffff;
   --ink: #23302c;
   --muted: #6b7770;
-  --brand: #2f6f5e;
-  --brand-dark: #204b3f;
+  --brand: #c1876f;
+  --brand-dark: #8f5f4c;
   --allow: #2f8f5b;
   --allow-bg: #e8f6ee;
   --avoid: #c0463b;
@@ -407,6 +407,35 @@ main {
 
 .saved-meal-items {
   font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.saved-meal-macros {
+  font-size: 0.78rem;
+  color: var(--brand-dark);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.day-macro-text {
+  font-size: 0.85rem;
+  color: var(--brand-dark);
+  font-weight: 700;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.macro-line {
+  margin-top: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--brand-dark);
+}
+
+.macro-caveat {
+  font-size: 0.75rem;
   color: var(--muted);
   margin-top: 3px;
 }
