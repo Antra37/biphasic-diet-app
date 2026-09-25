@@ -181,7 +181,7 @@
 
   function setDraftServings(foodId, servings) {
     const item = draftItems.find((i) => i.foodId === foodId);
-    if (item) item.servings = Math.max(0.5, Math.round(servings * 2) / 2);
+    if (item) item.servings = Math.max(0.25, Math.round(servings * 4) / 4);
     renderDraftItems();
   }
 
@@ -193,11 +193,6 @@
 
   function statusMeta() {
     return window.SiboStatusMeta;
-  }
-
-  function isCappedCategory(catId) {
-    const limits = CATEGORY_LIMITS[catId];
-    return !!(limits && limits.capPerMeal);
   }
 
   function renderDraftItems() {
@@ -214,7 +209,6 @@
     draftItems.forEach((item) => {
       const food = getFood(item.foodId);
       const pd = food[ph];
-      const capped = pd.status === "allow" && isCappedCategory(food.category);
       const row = document.createElement("div");
       row.className = `meal-item-row ${pd.status}`;
 
@@ -222,14 +216,14 @@
       if (pd.status === "allow") {
         subLine += pd.qty
           ? `<span class="meal-item-limit">1 serving = ${escapeHtml(pd.qty)}</span>`
-          : `<span class="meal-item-limit">unlimited</span>`;
+          : `<span class="meal-item-limit">unlimited - no stated serving size</span>`;
       }
 
       const noteLine = item.qtyNote
         ? `<div class="meal-item-note">You entered: ${escapeHtml(item.qtyNote)}</div>`
         : "";
 
-      const controls = capped
+      const controls = pd.status === "allow"
         ? `<button class="stepper-btn" data-action="dec" data-id="${food.id}">−</button>
            <span class="stepper-val">${item.servings}</span>
            <button class="stepper-btn" data-action="inc" data-id="${food.id}">+</button>`
@@ -261,11 +255,11 @@
     if (action === "remove") removeDraftItem(id);
     else if (action === "inc") {
       const item = draftItems.find((i) => i.foodId === id);
-      setDraftServings(id, item.servings + 0.5);
+      setDraftServings(id, item.servings + 0.25);
     } else if (action === "dec") {
       const item = draftItems.find((i) => i.foodId === id);
-      if (item.servings <= 0.5) removeDraftItem(id);
-      else setDraftServings(id, item.servings - 0.5);
+      if (item.servings <= 0.25) removeDraftItem(id);
+      else setDraftServings(id, item.servings - 0.25);
     }
   });
 
