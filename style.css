@@ -785,3 +785,49 @@ main {
   font-weight: 700;
   font-size: 0.92rem;
 }
+
+/* ---------- Supplement label lookup ---------- */
+.supp-lookup {
+  margin-bottom: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.supp-lookup-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.supp-lookup-row .meal-name-input {
+  min-width: 0;
+}
+
+.supp-lookup-row .secondary-btn {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.supp-lookup-status {
+  font-size: 0.85rem;
+  margin: 6px 0;
+  opacity: 0.85;
+}
+
+.supp-lookup-row .secondary-btn {
+  width: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.supp-lookup-row .meal-name-input {
+  flex: 1 1 auto;
+  width: auto;
+}
+
+#suppForm > .meal-name-input,
+#ruleForm > .meal-name-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}

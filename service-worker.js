@@ -1,4 +1,4 @@
-const CACHE_NAME = "sibo-food-checker-v11";
+const CACHE_NAME = "sibo-food-checker-v14";
 const ASSETS = [
   "./",
   "./index.html",
@@ -6,6 +6,8 @@ const ASSETS = [
   "./match.js",
   "./app.js",
   "./meal.js",
+  "./push-config.js",
+  "./supplements.js",
   "./data/foods.js",
   "./data/nutrition.js",
   "./manifest.json",
@@ -38,6 +40,8 @@ self.addEventListener("activate", (event) => {
 // actively being updated.)
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  // Leave cross-origin requests (e.g. the supplement label API) to the browser.
+  if (new URL(event.request.url).origin !== self.location.origin) return;
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
@@ -45,5 +49,37 @@ self.addEventListener("fetch", (event) => {
         return networkResponse;
       })
       .catch(() => caches.match(event.request))
+  );
+});
+
+// ---------- Supplement reminders pushed from the worker/ backend ----------
+self.addEventListener("push", (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (e) {}
+  const title = data.title || "Supplement due";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: data.body || "",
+      tag: data.tag || undefined,
+      icon: "icons/icon-192.png",
+      badge: "icons/icon-192.png",
+      data: { url: data.url || "./#supplements" },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || "./#supplements", self.registration.scope).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if (client.url.startsWith(self.registration.scope) && "focus" in client) {
+          client.navigate(target).catch(() => {});
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(target);
+    })
   );
 });

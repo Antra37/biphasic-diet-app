@@ -1,0 +1,13 @@
+{
+  "name": "sibo-supplement-push",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test/webpush.test.mjs && node test/cron.test.mjs",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "http_ece": "^1.2.0",
+    "wrangler": "^4.0.0"
+  }
+}

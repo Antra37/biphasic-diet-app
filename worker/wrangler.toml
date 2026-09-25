@@ -1,0 +1,19 @@
+name = "sibo-supplement-push"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+preview_urls = false
+
+# Check for due doses once a minute.
+[triggers]
+crons = ["* * * * *"]
+
+[vars]
+ALLOWED_ORIGINS = "https://antra37.github.io,http://localhost:8532"
+VAPID_SUBJECT = "https://antra37.github.io/biphasic-diet-app/"
+# VAPID_PUBLIC_KEY and VAPID_PRIVATE_JWK are set as secrets (see README.md).
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sibo-supplement-push"
+database_id = "1d35569e-584b-4f54-89e0-31d80db00753"

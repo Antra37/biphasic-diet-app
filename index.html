@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="icons/icon-192.png" />
 <link rel="apple-touch-icon" href="icons/icon-192.png" />
-<link rel="stylesheet" href="style.css?v=12" />
+<link rel="stylesheet" href="style.css?v=14" />
 </head>
 <body>
 <header class="app-header">
@@ -22,6 +22,7 @@
 <nav class="tab-bar" role="tablist">
   <button class="tab-btn active" data-tab="search" role="tab" aria-selected="true">Search</button>
   <button class="tab-btn" data-tab="meal" role="tab" aria-selected="false">Meal Check</button>
+  <button class="tab-btn" data-tab="supplements" role="tab" aria-selected="false">Supplements</button>
 </nav>
 
 <div id="phaseSheet" class="phase-sheet hidden">
@@ -114,6 +115,104 @@
     <button id="addMealBtn" class="add-meal-btn">+ Add a meal</button>
   </section>
 
+  <!-- ===================== SUPPLEMENTS TAB ===================== -->
+  <section id="tab-supplements" class="tab-panel hidden">
+
+    <div id="notifBanner" class="notif-banner hidden">
+      <span id="notifBannerText">Get a reminder on this phone when a dose is due</span>
+      <button id="enableNotifBtn" class="link-btn">Enable</button>
+    </div>
+
+    <div id="dueNowWrap" class="due-now-wrap"></div>
+
+    <div class="day-summary">
+      <div class="day-summary-row">
+        <span id="suppDateLabel" class="day-date"></span>
+        <button id="manageSuppBtn" class="link-btn">Manage</button>
+      </div>
+      <div id="scheduleList" class="schedule-list"></div>
+    </div>
+
+    <!-- Manage: lists of supplements + rules -->
+    <div id="suppManagePanel" class="meal-editor hidden">
+      <div class="meal-editor-head">
+        <h3 class="meal-editor-title">Manage supplements</h3>
+        <button id="suppManageClose" class="link-btn">Done</button>
+      </div>
+
+      <label class="field-label">Your supplements</label>
+      <div id="suppList" class="supp-list"></div>
+      <button id="addSuppBtn" class="secondary-btn">+ Add supplement</button>
+
+      <label class="field-label">Spacing rules between supplements</label>
+      <p class="field-hint">e.g. "can't take within 2 hours of that one" - add these yourself from what the label/practitioner says. Nothing here is looked up automatically.</p>
+      <div id="ruleList" class="supp-list"></div>
+      <button id="addRuleBtn" class="secondary-btn">+ Add spacing rule</button>
+
+      <label class="field-label">Reminders</label>
+      <p id="pushStatusText" class="field-hint"></p>
+      <button id="pushTestBtn" class="secondary-btn hidden">Send a test notification</button>
+    </div>
+
+    <!-- Add/edit one supplement -->
+    <div id="suppForm" class="meal-editor hidden">
+      <div class="meal-editor-head">
+        <h3 id="suppFormTitle" class="meal-editor-title">Add supplement</h3>
+        <button id="suppFormClose" class="link-btn">Cancel</button>
+      </div>
+
+      <div id="suppLookup" class="supp-lookup">
+        <label class="field-label">Look up the product (optional)</label>
+        <div class="supp-lookup-row">
+          <input id="suppLookupInput" class="meal-name-input" type="search" placeholder="Brand + product, e.g. Pure Encapsulations magnesium" />
+          <button id="suppLookupBtn" class="secondary-btn">Search</button>
+        </div>
+        <p class="field-hint">Searches the NIH Dietary Supplement Label Database (US labels). Fills in the details below from the product label - check them against her bottle. Brands not sold in the US (e.g. BioMedica) won't be there; just type those in.</p>
+        <div id="suppLookupStatus" class="supp-lookup-status hidden"></div>
+        <div id="suppLookupResults" class="supp-list"></div>
+      </div>
+
+      <label class="field-label">Name</label>
+      <input id="suppNameInput" class="meal-name-input" type="text" placeholder="e.g. Magnesium glycinate" />
+
+      <label class="field-label">Dosage</label>
+      <input id="suppDosageInput" class="meal-name-input" type="text" placeholder="e.g. 2 capsules" />
+
+      <label class="field-label">Times per day</label>
+      <div id="suppTimesList" class="supp-times-list"></div>
+      <button id="suppAddTimeBtn" class="secondary-btn">+ Add a time</button>
+
+      <label class="field-label">Label warnings / notes (optional)</label>
+      <textarea id="suppNotesInput" class="quick-add-text" rows="2" placeholder="e.g. Take on an empty stomach. Avoid within 1 hour of caffeine."></textarea>
+
+      <button id="suppSaveBtn" class="primary-btn">Save supplement</button>
+      <button id="suppDeleteBtn" class="danger-btn hidden">Delete supplement</button>
+    </div>
+
+    <!-- Add/edit one spacing rule -->
+    <div id="ruleForm" class="meal-editor hidden">
+      <div class="meal-editor-head">
+        <h3 class="meal-editor-title">Spacing rule</h3>
+        <button id="ruleFormClose" class="link-btn">Cancel</button>
+      </div>
+      <label class="field-label">First supplement</label>
+      <select id="ruleAInput" class="meal-name-input"></select>
+
+      <label class="field-label">Must be kept apart from</label>
+      <select id="ruleBInput" class="meal-name-input"></select>
+
+      <label class="field-label">Minimum gap (hours)</label>
+      <input id="ruleGapInput" class="meal-name-input" type="number" min="0" step="0.25" placeholder="e.g. 2" />
+
+      <label class="field-label">Note (optional)</label>
+      <input id="ruleNoteInput" class="meal-name-input" type="text" placeholder="e.g. iron blocks absorption" />
+
+      <button id="ruleSaveBtn" class="primary-btn">Save rule</button>
+      <button id="ruleDeleteBtn" class="danger-btn hidden">Delete rule</button>
+    </div>
+
+  </section>
+
 </main>
 
 <div id="exportModal" class="phase-sheet hidden">
@@ -137,10 +236,12 @@
   <p>Reference tool built from <em>The SIBO Bi-Phasic Diet</em> (Dr. Nirala Jacobi ND). Not medical advice — when in doubt, check with your practitioner.</p>
 </footer>
 
-<script src="data/foods.js?v=12"></script>
-<script src="data/nutrition.js?v=12"></script>
-<script src="match.js?v=12"></script>
-<script src="app.js?v=12"></script>
-<script src="meal.js?v=12"></script>
+<script src="data/foods.js?v=14"></script>
+<script src="data/nutrition.js?v=14"></script>
+<script src="match.js?v=14"></script>
+<script src="app.js?v=14"></script>
+<script src="meal.js?v=14"></script>
+<script src="push-config.js?v=14"></script>
+<script src="supplements.js?v=14"></script>
 </body>
 </html>

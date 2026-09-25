@@ -160,6 +160,7 @@
   const tabPanels = {
     search: document.getElementById("tab-search"),
     meal: document.getElementById("tab-meal"),
+    supplements: document.getElementById("tab-supplements"),
   };
   tabBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -172,8 +173,17 @@
         tabPanels[key].classList.toggle("hidden", key !== tab);
       });
       if (tab === "meal") window.dispatchEvent(new CustomEvent("sibo-tab-meal-shown"));
+      if (tab === "supplements") window.dispatchEvent(new CustomEvent("sibo-tab-supplements-shown"));
     });
   });
+
+  // Deep link, e.g. tapping a supplement reminder opens ./#supplements
+  function openTabFromHash() {
+    const tab = location.hash.replace("#", "");
+    const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+    if (btn) btn.click();
+  }
+  window.addEventListener("hashchange", openTabFromHash);
 
   // Init
   setPhase(currentPhase);
@@ -185,3 +195,8 @@
     });
   }
 })();
+
+window.addEventListener("load", () => {
+  const btn = document.querySelector(`.tab-btn[data-tab="${location.hash.replace("#", "")}"]`);
+  if (btn) btn.click();
+});
