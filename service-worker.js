@@ -1,4 +1,4 @@
-const CACHE_NAME = "sibo-food-checker-v3";
+const CACHE_NAME = "sibo-food-checker-v5";
 const ASSETS = [
   "./",
   "./index.html",
@@ -10,6 +10,8 @@ const ASSETS = [
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
+  "./assets/veg-bg.jpg",
+  "./assets/fruit-bg.jpg",
 ];
 
 self.addEventListener("install", (event) => {
