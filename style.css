@@ -591,6 +591,9 @@ main {
 .meal-item-row.allow { border-left-color: var(--allow); }
 .meal-item-row.avoid { border-left-color: var(--avoid); }
 .meal-item-row.caution { border-left-color: var(--caution); }
+.meal-item-row.over-serving { border-left-color: var(--avoid); background: var(--avoid-bg); }
+
+.status-badge.over { background: var(--avoid-bg); color: var(--avoid); border: 1px solid var(--avoid); }
 
 .meal-item-name {
   font-weight: 700;
@@ -600,7 +603,8 @@ main {
 .meal-item-sub {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px 8px;
   margin-top: 3px;
 }
 

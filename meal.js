@@ -245,11 +245,19 @@
     draftItems.forEach((item) => {
       const food = getFood(item.foodId);
       const pd = food[ph];
+      // Only flag "over a serve" when the DIET itself states a per-meal quantity for this
+      // food (pd.qty) - not for the reference sizes we invented just for nutrition totals,
+      // where having "more than 1 serving" (e.g. 2 chicken breasts) isn't actually a
+      // diet violation.
+      const overServing = !!pd.qty && item.servings > 1;
       const row = document.createElement("div");
-      row.className = `meal-item-row ${pd.status}`;
+      row.className = `meal-item-row ${pd.status}${overServing ? " over-serving" : ""}`;
 
       const label = servingLabel(food, pd);
       let subLine = `<span class="status-badge small ${pd.status}">${meta[pd.status].icon} ${meta[pd.status].label}</span>`;
+      if (overServing) {
+        subLine += `<span class="status-badge small over">⚑ Over a serve</span>`;
+      }
       if (label) {
         subLine += `<span class="meal-item-limit">1 serving = ${escapeHtml(label)}</span>`;
       } else if (pd.status === "allow") {
