@@ -66,7 +66,10 @@
     <div class="day-summary">
       <div class="day-summary-row">
         <span id="dayDateLabel" class="day-date"></span>
-        <button id="newDayBtn" class="link-btn">Start new day</button>
+        <span class="day-summary-actions">
+          <button id="exportBtn" class="link-btn">Export</button>
+          <button id="newDayBtn" class="link-btn">Clear today</button>
+        </span>
       </div>
       <div class="fruit-gauge">
         <span>Fruit today</span>
@@ -77,9 +80,10 @@
 
     <div id="mealEditor" class="meal-editor hidden">
       <div class="meal-editor-head">
-        <input id="mealNameInput" class="meal-name-input" type="text" placeholder="Meal name (e.g. Lunch)" />
+        <h3 id="mealEditorTitle" class="meal-editor-title">Add a meal</h3>
         <button id="mealEditorClose" class="link-btn">Cancel</button>
       </div>
+      <input id="mealNameInput" class="meal-name-input" type="text" placeholder="Meal name (e.g. Lunch)" />
 
       <label class="field-label">Type what you're having (comma-separated is fine)</label>
       <textarea id="quickAddText" class="quick-add-text" rows="2" placeholder="e.g. 200g steak, broccoli, green beans, rocket and carrot salad"></textarea>
@@ -103,13 +107,30 @@
 
       <div id="verdictWrap" class="verdict-wrap hidden"></div>
 
-      <button id="saveMealBtn" class="save-btn hidden">Save to today's log</button>
+      <button id="saveMealBtn" class="save-btn hidden">Save meal</button>
     </div>
 
     <button id="addMealBtn" class="add-meal-btn">+ Add a meal</button>
   </section>
 
 </main>
+
+<div id="exportModal" class="phase-sheet hidden">
+  <div class="phase-sheet-inner export-sheet">
+    <div class="export-head">
+      <h2>Food diary export</h2>
+      <button id="exportModalClose" class="link-btn">Close</button>
+    </div>
+    <p class="export-hint">Copy, share, or download this to give to your practitioner.</p>
+    <textarea id="exportText" class="export-textarea" rows="10" readonly></textarea>
+    <p id="exportCopiedNote" class="export-copied hidden">Copied!</p>
+    <div class="export-actions">
+      <button id="exportCopyBtn" class="primary-btn">Copy text</button>
+      <button id="exportShareBtn" class="primary-btn hidden">Share…</button>
+      <button id="exportDownloadBtn" class="secondary-btn">Download .txt</button>
+    </div>
+  </div>
+</div>
 
 <footer class="app-footer">
   <p>Reference tool built from <em>The SIBO Bi-Phasic Diet</em> (Dr. Nirala Jacobi ND). Not medical advice — when in doubt, check with your practitioner.</p>

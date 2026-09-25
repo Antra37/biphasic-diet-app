@@ -1,16 +1,19 @@
 (function () {
   "use strict";
 
-  const DAY_STORAGE_KEY = "sibo-day-log";
+  const DIARY_KEY = "sibo-diary-v1";
+  const OLD_DAY_KEY = "sibo-day-log"; // v1 single-day format, migrated on first load
 
   // ---------- DOM ----------
   const dayDateLabel = document.getElementById("dayDateLabel");
   const newDayBtn = document.getElementById("newDayBtn");
+  const exportBtn = document.getElementById("exportBtn");
   const fruitGaugeText = document.getElementById("fruitGaugeText");
   const todayMealsEl = document.getElementById("todayMeals");
 
   const addMealBtn = document.getElementById("addMealBtn");
   const mealEditor = document.getElementById("mealEditor");
+  const mealEditorTitle = document.getElementById("mealEditorTitle");
   const mealEditorClose = document.getElementById("mealEditorClose");
   const mealNameInput = document.getElementById("mealNameInput");
 
@@ -27,9 +30,18 @@
   const verdictWrap = document.getElementById("verdictWrap");
   const saveMealBtn = document.getElementById("saveMealBtn");
 
+  const exportModal = document.getElementById("exportModal");
+  const exportModalClose = document.getElementById("exportModalClose");
+  const exportText = document.getElementById("exportText");
+  const exportCopyBtn = document.getElementById("exportCopyBtn");
+  const exportShareBtn = document.getElementById("exportShareBtn");
+  const exportDownloadBtn = document.getElementById("exportDownloadBtn");
+  const exportCopiedNote = document.getElementById("exportCopiedNote");
+
   // ---------- State ----------
-  let dayLog = loadDayLog();
-  let draftItems = []; // [{foodId, servings}]
+  let diary = loadDiary();
+  let draftItems = []; // [{foodId, servings, qtyNote}]
+  let editingMealId = null;
 
   function getFood(id) {
     return FOODS.find((f) => f.id === id);
@@ -44,21 +56,40 @@
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
 
-  function loadDayLog() {
+  function loadDiary() {
     let raw;
     try {
-      raw = JSON.parse(localStorage.getItem(DAY_STORAGE_KEY));
+      raw = JSON.parse(localStorage.getItem(DIARY_KEY));
     } catch (e) {
       raw = null;
     }
-    if (!raw || raw.date !== todayStr()) {
-      return { date: todayStr(), meals: [] };
+    if (raw && raw.days) return raw;
+
+    // Migrate the old single-day format if present.
+    let old;
+    try {
+      old = JSON.parse(localStorage.getItem(OLD_DAY_KEY));
+    } catch (e) {
+      old = null;
     }
-    return raw;
+    const days = {};
+    if (old && old.date && Array.isArray(old.meals) && old.meals.length > 0) {
+      days[old.date] = { meals: old.meals };
+    }
+    return { days };
   }
 
-  function saveDayLog() {
-    localStorage.setItem(DAY_STORAGE_KEY, JSON.stringify(dayLog));
+  function saveDiary() {
+    localStorage.setItem(DIARY_KEY, JSON.stringify(diary));
+  }
+
+  function getDay(dateStr) {
+    if (!diary.days[dateStr]) diary.days[dateStr] = { meals: [] };
+    return diary.days[dateStr];
+  }
+
+  function todayMeals() {
+    return getDay(todayStr()).meals;
   }
 
   // ---------- Text parsing ----------
@@ -82,8 +113,6 @@
     let s = raw.trim();
     let qtyText = null;
 
-    // Strip leading connector words and a leading quantity, in whichever order
-    // they appear ("a 200g steak" vs "200g of steak"), until neither matches.
     let changed = true;
     while (changed) {
       changed = false;
@@ -134,12 +163,13 @@
   }
 
   // ---------- Draft item management ----------
-  function addDraftItem(foodId) {
+  function addDraftItem(foodId, qtyNote) {
     const existing = draftItems.find((i) => i.foodId === foodId);
     if (existing) {
       existing.servings += 1;
+      if (qtyNote && !existing.qtyNote) existing.qtyNote = qtyNote;
     } else {
-      draftItems.push({ foodId, servings: 1 });
+      draftItems.push({ foodId, servings: 1, qtyNote: qtyNote || null });
     }
     renderDraftItems();
   }
@@ -165,6 +195,11 @@
     return window.SiboStatusMeta;
   }
 
+  function isCappedCategory(catId) {
+    const limits = CATEGORY_LIMITS[catId];
+    return !!(limits && limits.capPerMeal);
+  }
+
   function renderDraftItems() {
     mealItemsEl.innerHTML = "";
     if (draftItems.length === 0) {
@@ -179,20 +214,35 @@
     draftItems.forEach((item) => {
       const food = getFood(item.foodId);
       const pd = food[ph];
+      const capped = pd.status === "allow" && isCappedCategory(food.category);
       const row = document.createElement("div");
       row.className = `meal-item-row ${pd.status}`;
+
+      let subLine = `<span class="status-badge small ${pd.status}">${meta[pd.status].icon} ${meta[pd.status].label}</span>`;
+      if (pd.status === "allow") {
+        subLine += pd.qty
+          ? `<span class="meal-item-limit">1 serving = ${escapeHtml(pd.qty)}</span>`
+          : `<span class="meal-item-limit">unlimited</span>`;
+      }
+
+      const noteLine = item.qtyNote
+        ? `<div class="meal-item-note">You entered: ${escapeHtml(item.qtyNote)}</div>`
+        : "";
+
+      const controls = capped
+        ? `<button class="stepper-btn" data-action="dec" data-id="${food.id}">−</button>
+           <span class="stepper-val">${item.servings}</span>
+           <button class="stepper-btn" data-action="inc" data-id="${food.id}">+</button>`
+        : "";
+
       row.innerHTML = `
         <div class="meal-item-main">
           <div class="meal-item-name">${escapeHtml(food.name)}</div>
-          <div class="meal-item-sub">
-            <span class="status-badge small ${pd.status}">${meta[pd.status].icon} ${meta[pd.status].label}</span>
-            ${pd.status === "allow" ? `<span class="meal-item-limit">${pd.qty ? "limit " + escapeHtml(pd.qty) : "unlimited"}</span>` : ""}
-          </div>
+          <div class="meal-item-sub">${subLine}</div>
+          ${noteLine}
         </div>
         <div class="meal-item-controls">
-          <button class="stepper-btn" data-action="dec" data-id="${food.id}">−</button>
-          <span class="stepper-val">${item.servings}</span>
-          <button class="stepper-btn" data-action="inc" data-id="${food.id}">+</button>
+          ${controls}
           <button class="remove-btn" data-action="remove" data-id="${food.id}" aria-label="Remove">&times;</button>
         </div>
       `;
@@ -225,7 +275,7 @@
     if (!text) return;
     const result = parseMealText(text);
 
-    result.matched.forEach((m) => addDraftItem(m.food.id));
+    result.matched.forEach((m) => addDraftItem(m.food.id, m.qtyText));
 
     unmatchedList.innerHTML = "";
     const toShow = [...result.uncertain, ...result.unmatched];
@@ -244,7 +294,7 @@
           b.className = "chip";
           b.textContent = food.name;
           b.addEventListener("click", () => {
-            addDraftItem(food.id);
+            addDraftItem(food.id, u.qtyText);
             card.remove();
             if (unmatchedList.children.length === 0) unmatchedWrap.classList.add("hidden");
           });
@@ -276,7 +326,7 @@
       row.className = "meal-search-row";
       row.innerHTML = `<span>${escapeHtml(food.name)}</span><span class="add-icon">+ Add</span>`;
       row.addEventListener("click", () => {
-        addDraftItem(food.id);
+        addDraftItem(food.id, null);
         mealSearchInput.value = "";
         mealSearchResults.innerHTML = "";
       });
@@ -285,9 +335,10 @@
   });
 
   // ---------- Evaluation ----------
-  function occurrencesTodayExcludingDraft(foodId) {
+  function occurrencesTodayExcludingEdit(foodId) {
     let count = 0;
-    dayLog.meals.forEach((m) => {
+    todayMeals().forEach((m) => {
+      if (m.id === editingMealId) return;
       m.items.forEach((i) => {
         if (i.foodId === foodId) count += 1;
       });
@@ -297,11 +348,12 @@
 
   function fruitServingsToday() {
     let total = 0;
-    const ph = phase();
-    dayLog.meals.forEach((m) => {
+    todayMeals().forEach((m) => {
+      if (m.id === editingMealId) return;
+      const mp = m.phase || phase();
       m.items.forEach((i) => {
         const food = getFood(i.foodId);
-        if (food && food.category === "fruit" && food[ph].status === "allow") total += i.servings;
+        if (food && food.category === "fruit" && food[mp] && food[mp].status === "allow") total += i.servings;
       });
     });
     return total;
@@ -346,7 +398,7 @@
     okItems.forEach((i) => {
       const qty = i.food[ph].qty;
       if (qty && /day/i.test(qty)) {
-        const priorCount = occurrencesTodayExcludingDraft(i.food.id);
+        const priorCount = occurrencesTodayExcludingEdit(i.food.id);
         if (priorCount >= 1) {
           dailyReminders.push({ food: i.food, qty, priorCount });
         }
@@ -408,23 +460,46 @@
     renderVerdict(evaluateDraft());
   });
 
-  // ---------- Save / day log ----------
+  // ---------- Save / edit / day log ----------
   saveMealBtn.addEventListener("click", () => {
     const name = mealNameInput.value.trim() || "Meal";
-    dayLog.meals.push({
-      id: String(Date.now()),
-      name,
-      phase: phase(),
-      items: draftItems.map((i) => ({ foodId: i.foodId, servings: i.servings })),
-    });
-    saveDayLog();
+    const meals = todayMeals();
+
+    if (editingMealId) {
+      const idx = meals.findIndex((m) => m.id === editingMealId);
+      const record = {
+        id: editingMealId,
+        name,
+        phase: phase(),
+        items: draftItems.map((i) => ({ foodId: i.foodId, servings: i.servings })),
+      };
+      if (idx >= 0) meals[idx] = record;
+      else meals.push(record);
+    } else {
+      meals.push({
+        id: String(Date.now()),
+        name,
+        phase: phase(),
+        items: draftItems.map((i) => ({ foodId: i.foodId, servings: i.servings })),
+      });
+    }
+    saveDiary();
     closeMealEditor();
     renderToday();
   });
 
-  function openMealEditor() {
-    draftItems = [];
-    mealNameInput.value = "";
+  function openMealEditor(prefillMeal) {
+    if (prefillMeal) {
+      editingMealId = prefillMeal.id;
+      mealEditorTitle.textContent = "Edit meal";
+      mealNameInput.value = prefillMeal.name;
+      draftItems = prefillMeal.items.map((i) => ({ foodId: i.foodId, servings: i.servings, qtyNote: null }));
+    } else {
+      editingMealId = null;
+      mealEditorTitle.textContent = "Add a meal";
+      mealNameInput.value = "";
+      draftItems = [];
+    }
     quickAddText.value = "";
     mealSearchInput.value = "";
     mealSearchResults.innerHTML = "";
@@ -433,24 +508,27 @@
     renderDraftItems();
     mealEditor.classList.remove("hidden");
     addMealBtn.classList.add("hidden");
+    mealEditor.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function closeMealEditor() {
+    editingMealId = null;
     mealEditor.classList.add("hidden");
     addMealBtn.classList.remove("hidden");
   }
 
-  addMealBtn.addEventListener("click", openMealEditor);
+  addMealBtn.addEventListener("click", () => openMealEditor(null));
   mealEditorClose.addEventListener("click", closeMealEditor);
 
   newDayBtn.addEventListener("click", () => {
-    dayLog = { date: todayStr(), meals: [] };
-    saveDayLog();
+    getDay(todayStr()).meals = [];
+    saveDiary();
     renderToday();
   });
 
   function renderToday() {
-    dayDateLabel.textContent = new Date(dayLog.date + "T00:00:00").toLocaleDateString(undefined, {
+    const day = getDay(todayStr());
+    dayDateLabel.textContent = new Date(todayStr() + "T00:00:00").toLocaleDateString(undefined, {
       weekday: "long", month: "short", day: "numeric",
     });
 
@@ -460,22 +538,24 @@
     fruitGaugeText.classList.toggle("over", fruitTotal > fruitCap);
 
     todayMealsEl.innerHTML = "";
-    if (dayLog.meals.length === 0) {
+    if (day.meals.length === 0) {
       todayMealsEl.innerHTML = '<p class="today-empty">No meals logged yet today.</p>';
       return;
     }
 
-    const ph = phase();
-    dayLog.meals.forEach((meal) => {
+    day.meals.forEach((meal) => {
+      const mp = meal.phase || phase();
       const items = meal.items.map((i) => ({ ...i, food: getFood(i.foodId) })).filter((i) => i.food);
-      const hasAvoid = items.some((i) => i.food[ph].status === "avoid");
+      const hasAvoid = items.some((i) => i.food[mp] && i.food[mp].status === "avoid");
       const card = document.createElement("div");
       card.className = "saved-meal-card";
+      card.dataset.mealId = meal.id;
       card.innerHTML = `
         <div class="saved-meal-head">
           <span class="saved-meal-name">${escapeHtml(meal.name)}</span>
           ${hasAvoid ? '<span class="status-badge small avoid">✕ Check</span>' : '<span class="status-badge small allow">✓</span>'}
-          <button class="remove-btn" data-meal-id="${meal.id}" aria-label="Delete meal">&times;</button>
+          <button class="link-btn" data-action="edit" data-meal-id="${meal.id}">Edit</button>
+          <button class="remove-btn" data-action="delete" data-meal-id="${meal.id}" aria-label="Delete meal">&times;</button>
         </div>
         <div class="saved-meal-items">${items.map((i) => escapeHtml(i.food.name)).join(", ")}</div>
       `;
@@ -486,9 +566,88 @@
   todayMealsEl.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-meal-id]");
     if (!btn) return;
-    dayLog.meals = dayLog.meals.filter((m) => m.id !== btn.dataset.mealId);
-    saveDayLog();
-    renderToday();
+    const mealId = btn.dataset.mealId;
+    if (btn.dataset.action === "delete") {
+      const day = getDay(todayStr());
+      day.meals = day.meals.filter((m) => m.id !== mealId);
+      saveDiary();
+      renderToday();
+    } else if (btn.dataset.action === "edit") {
+      const meal = getDay(todayStr()).meals.find((m) => m.id === mealId);
+      if (meal) openMealEditor(meal);
+    }
+  });
+
+  // ---------- Export ----------
+  const PHASE_LABELS = { p1r: "Phase One – Restricted", p1s: "Phase One – Semi-Restricted", p2: "Phase Two – Reintroduce" };
+
+  function buildExportText() {
+    const dates = Object.keys(diary.days).filter((d) => diary.days[d].meals.length > 0).sort();
+    if (dates.length === 0) return "No meals logged yet.";
+
+    const lines = ["SIBO Bi-Phasic Diet — Food Diary", ""];
+    dates.forEach((dateStr) => {
+      const dateLabel = new Date(dateStr + "T00:00:00").toLocaleDateString(undefined, {
+        weekday: "long", year: "numeric", month: "short", day: "numeric",
+      });
+      lines.push(`== ${dateLabel} ==`);
+      diary.days[dateStr].meals.forEach((meal) => {
+        const mp = meal.phase || "p1r";
+        lines.push(`${meal.name} (${PHASE_LABELS[mp] || mp})`);
+        meal.items.forEach((i) => {
+          const food = getFood(i.foodId);
+          if (!food) return;
+          const pd = food[mp];
+          const statusTxt = pd.status === "avoid" ? "AVOID" : pd.status === "caution" ? "check with practitioner" : (pd.qty || "unlimited");
+          const servingsTxt = i.servings !== 1 ? ` x${i.servings}` : "";
+          lines.push(`  - ${food.name}${servingsTxt} [${statusTxt}]`);
+        });
+      });
+      lines.push("");
+    });
+    return lines.join("\n");
+  }
+
+  function openExportModal() {
+    exportText.value = buildExportText();
+    exportCopiedNote.classList.add("hidden");
+    exportModal.classList.remove("hidden");
+    exportShareBtn.classList.toggle("hidden", !navigator.share);
+  }
+
+  exportBtn.addEventListener("click", openExportModal);
+  exportModalClose.addEventListener("click", () => exportModal.classList.add("hidden"));
+  exportModal.addEventListener("click", (e) => {
+    if (e.target === exportModal) exportModal.classList.add("hidden");
+  });
+
+  exportCopyBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(exportText.value);
+      exportCopiedNote.classList.remove("hidden");
+    } catch (e) {
+      exportText.select();
+      document.execCommand("copy");
+      exportCopiedNote.classList.remove("hidden");
+    }
+  });
+
+  exportShareBtn.addEventListener("click", async () => {
+    try {
+      await navigator.share({ title: "SIBO Food Diary", text: exportText.value });
+    } catch (e) { /* user cancelled share - ignore */ }
+  });
+
+  exportDownloadBtn.addEventListener("click", () => {
+    const blob = new Blob([exportText.value], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `sibo-food-diary-${todayStr()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   });
 
   window.addEventListener("sibo-phase-changed", () => {
@@ -500,5 +659,6 @@
   });
 
   // Init
+  saveDiary();
   renderToday();
 })();

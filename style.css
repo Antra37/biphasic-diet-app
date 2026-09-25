@@ -637,3 +637,89 @@ main {
   font-weight: 700;
   font-size: 0.92rem;
 }
+
+.day-summary-actions {
+  display: flex;
+  gap: 14px;
+}
+
+.meal-editor-title {
+  margin: 0;
+  font-size: 1rem;
+  flex: 1;
+}
+
+.meal-item-note {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 3px;
+  font-style: italic;
+}
+
+.saved-meal-head .link-btn {
+  font-size: 0.78rem;
+  padding: 2px 4px;
+}
+
+/* Export modal (reuses .phase-sheet backdrop) */
+.export-sheet {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.export-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.export-head h2 {
+  flex: 1;
+  margin: 4px;
+  font-size: 1.05rem;
+}
+
+.export-hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 4px 4px 12px;
+}
+
+.export-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  background: var(--bg);
+  color: var(--ink);
+  resize: vertical;
+}
+
+.export-copied {
+  color: var(--allow);
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin: 8px 4px 0;
+}
+
+.export-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.secondary-btn {
+  width: 100%;
+  padding: 11px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--brand-dark);
+  font-weight: 700;
+  font-size: 0.92rem;
+}
