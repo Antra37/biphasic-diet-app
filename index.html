@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+<title>SIBO Bi-Phasic Food Checker</title>
+<meta name="theme-color" content="#2f6f5e" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="app-header">
+  <h1>SIBO Food Checker</h1>
+  <button id="phaseBtn" class="phase-btn" aria-haspopup="true" aria-expanded="false">
+    <span id="phaseLabel">Phase 1 · Restricted</span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+</header>
+
+<div id="phaseSheet" class="phase-sheet hidden">
+  <div class="phase-sheet-inner">
+    <h2>Which phase is she on?</h2>
+    <button class="phase-option" data-phase="p1r">
+      <span class="phase-option-title">Phase One — Restricted</span>
+      <span class="phase-option-sub">Strictest level. Most people start here.</span>
+    </button>
+    <button class="phase-option" data-phase="p1s">
+      <span class="phase-option-title">Phase One — Semi-Restricted</span>
+      <span class="phase-option-sub">Adds some rice, quinoa, buckwheat, millet.</span>
+    </button>
+    <button class="phase-option" data-phase="p2">
+      <span class="phase-option-title">Phase Two — Reintroduce</span>
+      <span class="phase-option-sub">Most expanded food list.</span>
+    </button>
+    <button id="phaseSheetClose" class="phase-cancel">Cancel</button>
+  </div>
+</div>
+
+<main>
+  <div class="search-wrap">
+    <input id="searchInput" type="text" inputmode="search" autocomplete="off" placeholder="Search a food, e.g. broccoli, tofu, honey…" />
+    <button id="clearBtn" class="clear-btn hidden" aria-label="Clear search">&times;</button>
+  </div>
+
+  <div id="results" class="results"></div>
+
+  <div id="emptyState" class="empty-state">
+    <p>Type a food above to check if it's allowed and how much of it she can have.</p>
+    <p class="hint">Try: <button class="chip" data-fill="broccoli">broccoli</button><button class="chip" data-fill="garlic">garlic</button><button class="chip" data-fill="rice">rice</button><button class="chip" data-fill="banana">banana</button></p>
+  </div>
+</main>
+
+<footer class="app-footer">
+  <p>Reference tool built from <em>The SIBO Bi-Phasic Diet</em> (Dr. Nirala Jacobi ND). Not medical advice — when in doubt, check with her practitioner.</p>
+</footer>
+
+<script src="data/foods.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
