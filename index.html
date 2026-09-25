@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="icons/icon-192.png" />
 <link rel="apple-touch-icon" href="icons/icon-192.png" />
-<link rel="stylesheet" href="style.css?v=14" />
+<link rel="stylesheet" href="style.css?v=15" />
 </head>
 <body>
 <header class="app-header">
@@ -167,7 +167,7 @@
           <input id="suppLookupInput" class="meal-name-input" type="search" placeholder="Brand + product, e.g. Pure Encapsulations magnesium" />
           <button id="suppLookupBtn" class="secondary-btn">Search</button>
         </div>
-        <p class="field-hint">Searches the NIH Dietary Supplement Label Database (US labels). Fills in the details below from the product label - check them against her bottle. Brands not sold in the US (e.g. BioMedica) won't be there; just type those in.</p>
+        <p class="field-hint">Searches the NIH Dietary Supplement Label Database (US labels) plus some Australian practitioner products we've added. Fills in the details below from the product label - check them against her bottle. If a product isn't found, just type it in.</p>
         <div id="suppLookupStatus" class="supp-lookup-status hidden"></div>
         <div id="suppLookupResults" class="supp-list"></div>
       </div>
@@ -236,12 +236,13 @@
   <p>Reference tool built from <em>The SIBO Bi-Phasic Diet</em> (Dr. Nirala Jacobi ND). Not medical advice — when in doubt, check with your practitioner.</p>
 </footer>
 
-<script src="data/foods.js?v=14"></script>
-<script src="data/nutrition.js?v=14"></script>
-<script src="match.js?v=14"></script>
-<script src="app.js?v=14"></script>
-<script src="meal.js?v=14"></script>
-<script src="push-config.js?v=14"></script>
-<script src="supplements.js?v=14"></script>
+<script src="data/foods.js?v=15"></script>
+<script src="data/nutrition.js?v=15"></script>
+<script src="match.js?v=15"></script>
+<script src="app.js?v=15"></script>
+<script src="meal.js?v=15"></script>
+<script src="data/supplements-extra.js?v=15"></script>
+<script src="push-config.js?v=15"></script>
+<script src="supplements.js?v=15"></script>
 </body>
 </html>

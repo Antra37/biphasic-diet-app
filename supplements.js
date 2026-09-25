@@ -369,48 +369,94 @@
     return res.json();
   }
 
+  function wordsOf(s) {
+    return String(s || "").toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  }
+
+  // Built-in entries (data/supplements-extra.js) where most typed words match the start of a word
+  // in the brand/name/aliases ("bio medica phyt" finds BioMedica Phytaxil). "Most" rather than
+  // "all" so a typo in one word ("imuno") doesn't hide the product. Best matches first.
+  function searchExtras(q) {
+    const qWords = wordsOf(q);
+    if (qWords.length === 0) return [];
+    return (window.SIBO_EXTRA_SUPPLEMENTS || [])
+      .map((e) => {
+        const hay = [e.brand, e.name, ...(e.aliases || [])].join(" ").toLowerCase();
+        const hayWords = wordsOf(hay);
+        const squashed = hay.replace(/[^a-z0-9]/g, "");
+        const score = qWords.filter((w) => hayWords.some((h) => h.startsWith(w)) || (w.length > 3 && squashed.includes(w))).length;
+        return { e, score };
+      })
+      .filter((x) => x.score > 0 && x.score >= Math.ceil(qWords.length * 0.6))
+      .sort((a, b) => b.score - a.score)
+      .map(({ e }) => ({ id: "extra:" + e.id, brand: e.brand, name: e.name, form: e.form }));
+  }
+
+  function dsldItems(data) {
+    return (data && data.hits ? data.hits : []).map((h) => {
+      const s = h._source || {};
+      return { id: h._id, brand: s.brandName || "", name: s.fullName || "", offMarket: s.offMarket, entryDate: s.entryDate || "", form: s.physicalState && s.physicalState.langualCodeDescription };
+    });
+  }
+
   async function runLookup() {
     const q = suppLookupInput.value.trim();
     if (q.length < 2) { suppLookupInput.focus(); return; }
     const seq = ++lookupSeq;
     suppLookupResults.innerHTML = "";
     setLookupStatus("Searching…");
-    let data;
-    try {
-      data = await fetchJson(`${DSLD_API}/search-filter?q=${encodeURIComponent(q)}&size=40`);
-    } catch (e) {
-      if (seq === lookupSeq) setLookupStatus("Couldn't reach the label database (are you offline?). You can still fill in the details by hand.");
-      return;
+
+    const qWords = wordsOf(q);
+    const extras = searchExtras(q);
+
+    // The NIH search ranks mostly on product name, so a brand's product can sit far down the
+    // list. Also try treating the first 1-3 words as the brand ("pure encapsulations" + "digestive
+    // enzymes") with its brand filter, keeping only hits whose brand really contains those words
+    // (the filter is loose: brand "digestive" also matches "Digestive Advantage").
+    const brandSplits = [];
+    for (let k = 1; k <= Math.min(3, qWords.length - 1); k++) {
+      brandSplits.push({ brandWords: qWords.slice(0, k), rest: qWords.slice(k).join(" ") });
     }
+    const requests = [
+      fetchJson(`${DSLD_API}/search-filter?q=${encodeURIComponent(q)}&size=40`).then(dsldItems),
+      ...brandSplits.map((sp) =>
+        fetchJson(`${DSLD_API}/search-filter?q=${encodeURIComponent(sp.rest)}&brand=${encodeURIComponent(sp.brandWords.join(" "))}&size=40`)
+          .then(dsldItems)
+          .then((items) => items.filter((it) => {
+            const bw = wordsOf(it.brand);
+            return sp.brandWords.every((w) => bw.includes(w));
+          }))
+      ),
+    ];
+    const settled = await Promise.allSettled(requests);
     if (seq !== lookupSeq) return;
+    const dsldFailed = settled[0].status === "rejected";
+
+    // Brand-matched results first (longest brand match first), then the general search.
+    const ordered = [];
+    for (let i = settled.length - 1; i >= 1; i--) {
+      if (settled[i].status === "fulfilled") ordered.push(...settled[i].value);
+    }
+    if (!dsldFailed) ordered.push(...settled[0].value);
 
     // The database keeps every label version, so collapse duplicates (same brand + name),
-    // preferring products still on the market and the most recently entered label.
+    // preferring products still on the market and the most recently entered label,
+    // while keeping the position where each product first appeared.
     const byKey = new Map();
-    (data.hits || []).forEach((h) => {
-      const s = h._source || {};
-      const item = { id: h._id, brand: s.brandName || "", name: s.fullName || "", offMarket: s.offMarket, entryDate: s.entryDate || "", form: s.physicalState && s.physicalState.langualCodeDescription };
+    ordered.forEach((item) => {
       const key = (item.brand + "|" + item.name).toLowerCase();
       const prev = byKey.get(key);
-      const better = !prev
-        || (prev.offMarket && !item.offMarket)
+      if (!prev) { byKey.set(key, { ...item }); return; }
+      const better = (prev.offMarket && !item.offMarket)
         || (!!prev.offMarket === !!item.offMarket && item.entryDate > prev.entryDate);
-      if (better) byKey.set(key, item);
+      if (better) Object.assign(prev, item);
     });
-    // The API ranks mostly on the product name, so float labels whose brand she typed to the top.
-    const qWords = q.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
-    const brandHits = (brand) => {
-      const words = brand.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2);
-      return words.filter((w) => qWords.includes(w)).length;
-    };
-    const items = Array.from(byKey.values())
-      .map((it, i) => ({ it, i, score: brandHits(it.brand) }))
-      .sort((a, b) => b.score - a.score || a.i - b.i)
-      .map((x) => x.it)
-      .slice(0, 12);
+    const items = extras.concat(Array.from(byKey.values())).slice(0, 15);
 
     if (items.length === 0) {
-      setLookupStatus("No US labels found. Try the brand and product name, or just type the details in below.");
+      setLookupStatus(dsldFailed
+        ? "Couldn't reach the label database (are you offline?). You can still fill in the details by hand."
+        : "No labels found. Try the brand and product name, or just type the details in below.");
       return;
     }
     setLookupStatus("Tap the matching product:");
@@ -439,7 +485,50 @@
     return `${min}-${max}`;
   }
 
+  // Fill the form from a normalised label: {name, qtyText, unitText, amounts[], notes, minDaily, maxDaily, sourceId}
+  function fillFromLabel(l) {
+    const amountText = l.amounts.slice(0, 3).join(", ") + (l.amounts.length > 3 ? ", …" : "");
+    let dosage = [l.qtyText, l.unitText].filter(Boolean).join(" ");
+    if (amountText) dosage += dosage ? ` (${amountText})` : amountText;
+
+    suppNameInput.value = l.name;
+    suppDosageInput.value = dosage;
+    if (l.notes) suppNotesInput.value = l.notes;
+
+    const daily = l.minDaily || l.maxDaily;
+    const dailyRange = fmtRange(l.minDaily, l.maxDaily);
+    if (daily && DEFAULT_TIMES[daily]) {
+      suppTimesList.innerHTML = "";
+      DEFAULT_TIMES[daily].forEach((t) => addTimeRow(t));
+    }
+
+    pendingDsldId = l.sourceId;
+    suppLookupResults.innerHTML = "";
+    setLookupStatus(
+      `Filled in from the label${dailyRange ? ` (label says ${dailyRange}× daily)` : ""}. Check it against her bottle and adjust the times to what her practitioner prescribed.`
+    );
+  }
+
+  function applyExtra(id) {
+    const e = (window.SIBO_EXTRA_SUPPLEMENTS || []).find((x) => "extra:" + x.id === id);
+    if (!e) return;
+    lookupSeq++;
+    const sv = e.serving || {};
+    fillFromLabel({
+      name: `${e.brand} ${e.name}`,
+      qtyText: fmtRange(sv.min, sv.max),
+      unitText: sv.unit || "",
+      amounts: e.amounts || [],
+      notes: [e.directions, e.warnings].filter(Boolean).join(" "),
+      minDaily: sv.minDaily,
+      maxDaily: sv.maxDaily,
+      sourceId: id,
+    });
+  }
+
   async function applyLabel(id) {
+    if (String(id).startsWith("extra:")) { applyExtra(id); return; }
+
     const seq = ++lookupSeq;
     setLookupStatus("Loading label…");
     let label;
@@ -452,8 +541,6 @@
     if (seq !== lookupSeq) return;
 
     const serving = (label.servingSizes || [])[0] || {};
-    const qtyText = fmtRange(serving.minQuantity, serving.maxQuantity);
-    const unitText = cleanUnit(serving.unit, serving.maxQuantity || serving.minQuantity);
 
     // Headline amounts: the top-level ingredients with a stated quantity per serving.
     const amounts = (label.ingredientRows || [])
@@ -463,34 +550,23 @@
         return `${r.name} ${q.quantity} ${q.unit}`;
       })
       .filter(Boolean);
-    const amountText = amounts.slice(0, 3).join(", ") + (amounts.length > 3 ? ", …" : "");
-
-    let dosage = [qtyText, unitText].filter(Boolean).join(" ");
-    if (amountText) dosage += dosage ? ` (${amountText})` : amountText;
 
     // Label directions + any real precautions (skip boilerplate like storage/child-safety/FDA disclaimer).
     const notes = (label.statements || [])
       .filter((s) => /Suggested|Directions|Precautions re: All Other|Precautions re: Pregnan|Warning/i.test(s.type || ""))
       .map((s) => (s.notes || "").trim())
       .filter((n) => n && !/tamper|seal/i.test(n));
-    const uniqueNotes = Array.from(new Set(notes)).join(" ");
 
-    suppNameInput.value = [label.brandName, label.fullName].filter(Boolean).join(" ");
-    suppDosageInput.value = dosage;
-    if (uniqueNotes) suppNotesInput.value = uniqueNotes;
-
-    const daily = serving.minDailyServings || serving.maxDailyServings;
-    const dailyRange = fmtRange(serving.minDailyServings, serving.maxDailyServings);
-    if (daily && DEFAULT_TIMES[daily]) {
-      suppTimesList.innerHTML = "";
-      DEFAULT_TIMES[daily].forEach((t) => addTimeRow(t));
-    }
-
-    pendingDsldId = String(label.id || id);
-    suppLookupResults.innerHTML = "";
-    setLookupStatus(
-      `Filled in from the label${dailyRange ? ` (label says ${dailyRange}× daily)` : ""}. Check it against her bottle and adjust the times to what her practitioner prescribed.`
-    );
+    fillFromLabel({
+      name: [label.brandName, label.fullName].filter(Boolean).join(" "),
+      qtyText: fmtRange(serving.minQuantity, serving.maxQuantity),
+      unitText: cleanUnit(serving.unit, serving.maxQuantity || serving.minQuantity),
+      amounts,
+      notes: Array.from(new Set(notes)).join(" "),
+      minDaily: serving.minDailyServings,
+      maxDaily: serving.maxDailyServings,
+      sourceId: String(label.id || id),
+    });
   }
 
   suppLookupBtn.addEventListener("click", runLookup);
